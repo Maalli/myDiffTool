@@ -1,9 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "diffdialog.h"
-#include <QFileDialog>
-#include <QLineEdit>
-#include <QMessageBox>
+
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -49,6 +47,9 @@ void MainWindow::on_pushButton_clicked()
     }
 
     diffDialog diffD(this, ui->lineEdit_file1->text(), ui->lineEdit_file2->text());
+    diffD.setWindowState(diffD.windowState() | Qt::WindowMaximized);
+    diffD.setWindowFlags(windowFlags() | Qt::WindowMinimizeButtonHint);
+    diffD.setWindowFlags(windowFlags() | Qt::WindowMaximizeButtonHint);
     diffD.setModal(true);
     diffD.exec();
 
