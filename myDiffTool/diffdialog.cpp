@@ -10,11 +10,23 @@ diffDialog::diffDialog(QWidget *parent, QString filename1, QString filename2) :
     fileNameTwo(filename2)
 {
     ui->setupUi(this);
+    //this->showMaximized();
+    //qDebug() << "Window width:" << this->width();
+
+    // PREP WINDOW ------------------------------------------------------------------------------------
 
     // Tool tips
     ui->closeButton->setToolTip(tr("Close the comparison window."));
     ui->connectButton->setToolTip(tr("Connects two selected lines and adds it in the rule page"));
     ui->deleteButton->setToolTip(tr("Removes the selected rule."));
+
+    ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableView_2->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tableView_3->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+    createConfigureAndSetRuleView(ui->tableView_3);
+
+    // ------------------------------------------------------------------------------------------------
 
 
     /* Debug retreavel of filename from main window
@@ -23,7 +35,7 @@ diffDialog::diffDialog(QWidget *parent, QString filename1, QString filename2) :
     */
     QFile QFileOne(fileNameOne);
     QFile QFileTwo(fileNameTwo);
-    createConfigureAndSetRuleView(ui->tableView_3);
+
 
     if (!QFileOne.open(QIODevice::ReadOnly))
     {
@@ -45,6 +57,7 @@ diffDialog::diffDialog(QWidget *parent, QString filename1, QString filename2) :
         readFilesToLineList(in1, list1);
         readFilesToLineList(in2, list2);
 
+        // Create models
         model1 = new QStandardItemModel( list1.size(), list1[0].size(), this);
         model2 = new QStandardItemModel( list2.size(), list2[0].size(), this);
 
@@ -55,20 +68,37 @@ diffDialog::diffDialog(QWidget *parent, QString filename1, QString filename2) :
 
         // Find column for SHA id
         QRegExp shaRe("\\b[0-9a-f]{40}\\b");
-        if (identifyColumnByRegExp(list2, shaRe))
+        QRegExp fileRe("^(\\/[^\\/ ]*)+\\/?$");
+        QRegExp lineRe("^[0-9]+$");
+        shaColumn = getColumnByRegExp(list1, shaRe);
+        fileNameColumn = getColumnByRegExp(list1, fileRe);
+        lineColumn = getColumnByRegExp(list1, lineRe);
+        if (shaColumn == -1)
         {
-            //qDebug() << "True";
+            QMessageBox::information(this, tr("Error"), tr("Files does not contain SHA, path or line identifiers. Please specify specify files with the right format."));
+        }
+        else
+        {
+//            qDebug() << "Found all requiered columns!";
+//            qDebug() << "shaColumn:" << shaColumn << " fileNameColumn:" << fileNameColumn << " lineColumn:" << lineColumn;
         }
 
+
+
+        // Set and config input files to views
         setAndConfigureView(ui->tableView, model1);
         setAndConfigureView(ui->tableView_2, model2);
 
-        // Connect scroll bars WORKS!
-        //QObject::connect(ui->tableView_2->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->tableView->verticalScrollBar(), SLOT(setValue(int)));
-        //QObject::connect(ui->tableView_2->verticalScrollBar(), SLOT(valueChanged(int)), ui->tableView->verticalScrollBar(), SIGNAL(setValue(int)));
+        // Connect scroll bars !WORKS BUT NOT SO GOOD!
+//        QObject::connect(ui->tableView_2->verticalScrollBar(), SIGNAL(valueChanged(int)), ui->tableView->verticalScrollBar(), SLOT(setValue(int)));
+//        QObject::connect(ui->tableView_2->verticalScrollBar(), SLOT(valueChanged(int)), ui->tableView->verticalScrollBar(), SIGNAL(setValue(int)));
 
     }
 }
+
+
+
+
 
 diffDialog::~diffDialog()
 {
@@ -96,26 +126,22 @@ void diffDialog::writeTxtDataToModule(QStandardItemModel *module, QList<QStringL
             module->setData(index, list[row][column]);
         }
     }
+    module->sort(1);
 }
 
 
-bool diffDialog::identifyColumnByRegExp(QList<QStringList> &list, QRegExp &re)
+int diffDialog::getColumnByRegExp(QList<QStringList> &list, QRegExp &re)
 {
     for ( int column = 0; column < list[0].size(); ++column )
     {
-        //qDebug() << "list[0][column]:" << list[0][column];
+//        qDebug() << "list[0][column]:" << list[0][column];
         if ( re.indexIn( list[0][column] ) != -1 )
         {
-            //qDebug() << "Found one! Column:" << column;
-            return true;
-        }
-        else
-        {
-            //qDebug() << "Not found";
-            return false;
+//            qDebug() << "Found one! Column:" << column;
+            return column;
         }
     }
-    return false;
+    return -1;
 }
 
 void diffDialog::setAndConfigureView(QTableView *tabView, QStandardItemModel *module)
@@ -161,14 +187,24 @@ void diffDialog::on_connectButton_clicked()
     QStandardItem *itm = new QStandardItem(1);
     modelListRules->appendRow(itm);
 
-    // Appending another column to rules list
+    // Appending another column and set values to rules list
     int insertRow = modelListRules->rowCount();
+    // First file error msg
     QModelIndex index = modelListRules->index(insertRow-1, 0, QModelIndex());
-    modelListRules->setData(index, row1.first());
+    modelListRules->setData(index, model1->data( model1->index(row1.first().toInt(), 3, QModelIndex()) ) );
+    // Second file error msg
     index = modelListRules->index(insertRow-1, 1, QModelIndex());
-    modelListRules->setData(index, row2.first());
+    modelListRules->setData(index, model2->data( model2->index(row2.first().toInt(), 3, QModelIndex()) ) );
+    // Comment
     index = modelListRules->index(insertRow-1, 2, QModelIndex());
     modelListRules->setData(index, ui->lineEdit->text());
+    // TP/FP
+    index = modelListRules->index(insertRow-1, 3, QModelIndex());
+    modelListRules->setData(index, ui->radioTPButton->isChecked() ? "TP" : "FP");
+
+    // Clear input
+    ui->tableView->selectionModel()->clear();
+    ui->tableView_2->selectionModel()->clear();
     ui->lineEdit->clear();
 
 
@@ -181,17 +217,20 @@ void diffDialog::createConfigureAndSetRuleView(QTableView *tabView)
 {
     ui->lineEdit->setPlaceholderText("Add comments...");
 
-    modelListRules = new QStandardItemModel(0, 3, this);
+    modelListRules = new QStandardItemModel(0, 4, this);
     tabView->setModel(modelListRules);
     tabView->resizeColumnsToContents();
-    tabView->setColumnWidth(0, 300);
-    tabView->setColumnWidth(1, 300);
-    tabView->setColumnWidth(2, 500);
+    tabView->setColumnWidth(0, 2*(this->width()/7));    //2*(this->width()/7) or 500
+    tabView->setColumnWidth(1, 2*(this->width()/7));    //2*(this->width()/7) or 500
+    tabView->setColumnWidth(2, 2*(this->width()/7));    //2*(this->width()/7) or 500
+    tabView->setColumnWidth(3, (this->width()/7));     //(this->width()/7) or 80
 
+//    tabView->horizontalHeader()->setStretchLastSection(true);
 
     modelListRules->setHeaderData(0, Qt::Horizontal, fileNameOne);
     modelListRules->setHeaderData(1, Qt::Horizontal, fileNameTwo);
     modelListRules->setHeaderData(2, Qt::Horizontal, "Comments");
+    modelListRules->setHeaderData(3, Qt::Horizontal, "TP/FP");
 
 }
 
@@ -223,15 +262,14 @@ void diffDialog::on_exportButton_clicked()
             file.errorString());
             return;
         }
-        QDataStream out(&file);
-        out.setVersion(QDataStream::Qt_5_7);
+        QTextStream out(&file);
+//        out.setVersion(QDataStream::Qt_5_7);
 
         for ( int row = 0; row < r; ++row )
         {
             for ( int column = 0; column < c; ++column )
             {
                 QModelIndex index = modelListRules->index(row, column, QModelIndex());
-                qDebug() << modelListRules->data(index).toString();
                 out << QString(modelListRules->data(index).toString());
                 if (column+1 < c){
                     out << QString(" : ");
@@ -240,9 +278,9 @@ void diffDialog::on_exportButton_clicked()
                 }
             }
         }
-        out << QString("Hello World QString");
-        out << QByteArray("Hello World QByteArray");
         file.flush();
         file.close();
     }
 }
+
+

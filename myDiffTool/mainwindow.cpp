@@ -8,8 +8,8 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->lineEdit_file1->setText("C:/Users/martinl/GIT/160916/clang1.txt");
-    ui->lineEdit_file2->setText("C:/Users/martinl/GIT/160916/lint1.txt");
+    ui->lineEdit_file1->setText("C:/Users/martinl/Desktop/160920/clang1.txt");
+    ui->lineEdit_file2->setText("C:/Users/martinl/Desktop/160920/lint1.txt");
 }
 
 MainWindow::~MainWindow()

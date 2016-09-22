@@ -43,12 +43,14 @@ private:
 
     void readFilesToLineList(QTextStream &in, QList<QStringList> &list);
     void writeTxtDataToModule(QStandardItemModel *module, QList<QStringList> &list);
-    bool identifyColumnByRegExp(QList<QStringList> &list, QRegExp  &re);
+    int getColumnByRegExp(QList<QStringList> &list, QRegExp  &re);
     void setAndConfigureView(QTableView *tabView, QStandardItemModel *module);
     void createConfigureAndSetRuleView(QTableView *tabView);
 
     QString fileNameOne;
     QString fileNameTwo;
+
+    int shaColumn, fileNameColumn, lineColumn = -1;
 };
 
 #endif // DIFFDIALOG_H
