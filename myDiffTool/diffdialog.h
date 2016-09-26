@@ -13,6 +13,7 @@
 #include <QScrollBar>
 #include <QFileDialog>
 #include <QMessageBox>
+#include <QProcess>
 
 namespace Ui {
 class diffDialog;
@@ -34,6 +35,9 @@ private slots:
 
     void on_exportButton_clicked();
 
+    void on_tableView_doubleClicked(const QModelIndex &index);
+
+    void on_tableView_2_doubleClicked(const QModelIndex &index);
 
 private:
     Ui::diffDialog *ui;
@@ -42,15 +46,21 @@ private:
     QStandardItemModel *modelListRules;
 
     void readFilesToLineList(QTextStream &in, QList<QStringList> &list);
-    void writeTxtDataToModule(QStandardItemModel *module, QList<QStringList> &list);
-    int getColumnByRegExp(QList<QStringList> &list, QRegExp  &re);
+    void writeTxtDataToModel(QStandardItemModel *module, QList<QStringList> &list);
+    int getColumnByRegExp(QStandardItemModel *module, QRegExp  &re);
     void setAndConfigureView(QTableView *tabView, QStandardItemModel *module);
     void createConfigureAndSetRuleView(QTableView *tabView);
+    void autoMapSuggestions();
+    void syncFileNamesToScroll(QStandardItemModel *inModel1, QStandardItemModel *inModel2);
+    void populateColumnIdentifyersByReExp();
+
+
 
     QString fileNameOne;
     QString fileNameTwo;
 
     int shaColumn, fileNameColumn, lineColumn = -1;
+    QMap<int, int> autoMap;
 };
 
 #endif // DIFFDIALOG_H
