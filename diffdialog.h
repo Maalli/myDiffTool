@@ -8,6 +8,7 @@
 #include <QStringList>
 #include <QTableWidget>
 #include <QRegularExpression>
+#include <QSyntaxHighlighter>
 #include <QtCore>
 #include <QtGui>
 #include <QScrollBar>
@@ -18,6 +19,36 @@
 namespace Ui {
 class diffDialog;
 }
+
+class Highlighter : public QSyntaxHighlighter
+{
+    Q_OBJECT
+
+public:
+    Highlighter(QTextDocument *parent = 0);
+
+protected:
+    void highlightBlock(const QString &text) Q_DECL_OVERRIDE;
+
+private:
+    struct HighlightingRule
+    {
+        QRegExp pattern;
+        QTextCharFormat format;
+    };
+    QVector<HighlightingRule> highlightingRules;
+
+    QRegExp commentStartExpression;
+    QRegExp commentEndExpression;
+
+    QTextCharFormat keywordFormat;
+    QTextCharFormat classFormat;
+    QTextCharFormat singleLineCommentFormat;
+    QTextCharFormat multiLineCommentFormat;
+    QTextCharFormat quotationFormat;
+    QTextCharFormat numberFormat;
+    QTextCharFormat functionFormat;
+};
 
 class diffDialog : public QDialog
 {
@@ -54,7 +85,7 @@ private:
     void syncFileNamesToScroll(QStandardItemModel *inModel1, QStandardItemModel *inModel2);
     void populateColumnIdentifyersByReExp();
 
-
+    Highlighter *highlighter;
 
     QString fileNameOne;
     QString fileNameTwo;

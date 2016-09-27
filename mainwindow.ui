@@ -22,7 +22,7 @@
         <item>
          <widget class="QPushButton" name="pushButton_file1">
           <property name="text">
-           <string>Brows</string>
+           <string>Browse</string>
           </property>
          </widget>
         </item>
@@ -42,7 +42,7 @@
         <item>
          <widget class="QPushButton" name="pushButton__file2">
           <property name="text">
-           <string>Brows</string>
+           <string>Browse</string>
           </property>
          </widget>
         </item>
@@ -112,7 +112,7 @@
      <x>0</x>
      <y>0</y>
      <width>544</width>
-     <height>21</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuClear_all">
