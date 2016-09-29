@@ -8,8 +8,9 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    ui->lineEdit_file1->setText("C:/Users/martinl/Desktop/myDiffTool/clangtidy1.txt");
-    ui->lineEdit_file2->setText("C:/Users/martinl/Desktop/myDiffTool/lint1.txt");
+
+    ui->lineEdit_file1->setText(QDir::homePath() + "/clang1.txt");
+    ui->lineEdit_file2->setText(QDir::homePath() + "/lint1.txt");
 }
 
 MainWindow::~MainWindow()
@@ -19,13 +20,13 @@ MainWindow::~MainWindow()
 
 void MainWindow::on_pushButton_file1_clicked()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Open Text file"), "/home", tr("Text Files (*.txt)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Open Text file"), QDir::homePath(), tr("Text Files (*.txt)"));
     ui->lineEdit_file1->setText(filename);
 }
 
 void MainWindow::on_pushButton__file2_clicked()
 {
-    QString filename = QFileDialog::getOpenFileName(this, tr("Open Text file"), "/home", tr("Text Files (*.txt)"));
+    QString filename = QFileDialog::getOpenFileName(this, tr("Open Text file"), QDir::homePath(), tr("Text Files (*.txt)"));
     ui->lineEdit_file2->setText(filename);
 }
 
